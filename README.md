@@ -1,7 +1,11 @@
 # Single & Multi-Node Cassandra on Ubuntu/Bento
 
+
+
 ## Catatan
 Semua konfigurasi pada percobaan ini ada di `REPOSITORY` ini. 
+### Arsitektur
+2 Buah Node masing-masing ber ip 192.168.2.2 (cassandra1) dan 192.168.2.3 (cassandra2)
 
 ## Jumpto
 1. [Single Node](#single-node)
