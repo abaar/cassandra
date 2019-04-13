@@ -1,11 +1,22 @@
 # Single & Multi-Node Cassandra on Ubuntu/Bento
 
-## Pre - Requisite
+## Catatan
+Semua konfigurasi pada percobaan ini ada di `REPOSITORY` ini. 
 
 ## Jumpto
-
+1. [Single Node](#single-node)
+    1. [Install Java](#1-install-java)
+    2. [Install Cassandra](#2-install-cassandra)
+    3. [Apakah sukses ?](#3-cek-status)
+2. [Multi Node](#multi-node)
+    1. [Delete data lama](#1-delete-data-yang-mungkin-tersimpan)
+    2. [Konfigurasi utama](#2-konfigurasi-cassandra-yaml)
+    3. [Konfigurasi rak](#3-konfigurasi-rak)
+    4. [Restart Cassandra](#4-jalankan-kembali-cassandra)
+    5. [Node Belum terdeteksi?](#5-apabila-node-belum-terdeteksi)
+3. [Kesimpulan](#kesimpulan)
+    
 ## Single Node
-### Requirement
 #### 1. Install Java
 Karena Cassandra perlu JVM maka kita perlu untuk menginstall Java, dapat dilakukan dengan syntax berikut
 ```
@@ -28,8 +39,9 @@ Kali ini kita akan mencoba install Cassandra versi 2.2, apabila anda ingin mengi
 echo "deb http://www.apache.org/dist/cassandra/debian 22x main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
 echo "deb-src http://www.apache.org/dist/cassandra/debian 22x main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
 ```
-Lalu lakukan / tambahkan `signature` berikut agar tidak ada `warning` yang muncul, sebenarnya bisa ditinggalkan dengan risiko ditanggun sendiri. Karena saya pribadi tidak memasukkannya
+Lalu lakukan / tambahkan `signature` berikut agar tidak ada `warning` yang muncul.
 ```
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A278B781FE4B2BDA
 gpg --keyserver pgp.mit.edu --recv-keys F758CE318D77295D
 gpg --export --armor F758CE318D77295D | sudo apt-key add -
 
@@ -71,3 +83,70 @@ cqlsh
 
 
 ## Multi Node
+Untuk membuat multi node tentu anda perlu node yang telah di install Cassandra, seperti 2 buah node pada gambar berikut :
+
+![ready to add](https://github.com/abaar/cassandra/blob/master/screenshoot/ready-to-add.PNG)
+
+#### 1. Delete data yang mungkin tersimpan
+Sebelum melanjutkan konfigurasi agar Cassandra saling terkoneksi, anda harus menghapus file data di masing-masing node dengan syntax berikut:
+```
+sudo service cassandra stop
+sudo rm -rf /var/lib/cassandra/data/system/*
+```
+
+#### 2. Konfigurasi cassandra yaml
+Anda perlu mengubah `cassandra.yaml` file konfigurasi yang terletak pada `/etc/cassandra/cassandra.yaml` seperti berikut :
+```
+.....
+cluster_name: 'Test Cluster' #Nama Clustermu, harus sama tiap node!
+.....
+seed_provider:
+  - class_name: org.apache.cassandra.locator.SimpleSeedProvider
+    parameters:
+         - seeds: "192.168.2.2,192.168.2.3"
+         #ip node 1,ip node 2, dan seterusnya
+         #ingat, dalam bentuk string yang dipisah ',' antar IP
+.....
+listen_address: 192.168.2.2 #ip masing-masing node tempat cassandra berjalan , berbeda setiap node
+.....
+rpc_address: 192.168.2.2 #ip masing-masing node tempat cassandra berjalan , berbeda setiap node
+.....
+endpoint_snitch: GossipingPropertyFileSnitch
+```
+Anda dapat melihat contoh konfigurasi pada percobaan saya [disini](https://github.com/abaar/cassandra/blob/master/cassandra.yml) dan [disini](https://github.com/abaar/cassandra/blob/master/cassandra2.yml).
+
+#### 3. Konfigurasi Rak
+Pastikan konfigurasi `/etc/cassandra/cassandra-rackdc.properties`  sama di setiap node agar cassandra bisa dijalankan
+```
+dc=datacenter1 #pastikan isian sama
+rack=rack1
+```
+
+#### 4. Jalankan Kembali Cassandra
+````
+sudo service cassandra start
+sudo nodetool status
+````
+Apabila sukses, maka akan muncul kedua node dalam status cluster yang aktif seperti gambar dibawah
+
+![multinode cassandra](https://github.com/abaar/cassandra/blob/master/screenshoot/multinode%20succeed.PNG)
+
+#### 5. Apabila Node belum terdeteksi
+Apabila gagal , maka anda perlu memberikan akses node untuk mengakses node lainnya dengan `IPTABLES` dengan menjalankan syntax berikut :
+```
+sudo iptables -A INPUT -p tcp -s 192.168.2.3 -m multiport --dports 7000,9042 -m state --state NEW,ESTABLISHED -j ACCEPT
+#Ganti 192.168.2.3 dengan masing-masing node, contoh kasus saya syntax ini dijalankan di 192.168.2.2
+```
+Apabila anda belum memiliki `IPTABLES` maka install-lah terlebih dahulu dengan syntax :
+```
+sudo apt-get install iptables -y
+```
+
+## Kesimpulan
+Kesimpulannya , `Cassandra` merupakan Database No-SQL yang memang memiliki dukungan arsitektur multi-node secara default. Hal ini dapat dilihat dengan mudahnya proses instalasi Cassandra dalam multi-node, tidak seperti MySQL cluster yang lebih _repot_. Anda juga bisa mengakses node lain dengan syntax
+```
+cqlsh ip-node 9042
+```
+Seperti gambar dibawah dimana `cassandra2` memiliki ip `192.168.2.3`
+
+![Connect to others](https://github.com/abaar/cassandra/blob/master/screenshoot/connected-cqlsh.PNG)
