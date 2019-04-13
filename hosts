@@ -1,0 +1,3 @@
+127.0.0.1 localhost
+192.168.2.3 cassandra2
+192.168.2.2 cassandra1
