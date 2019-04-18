@@ -1,6 +1,6 @@
 # Single & Multi-Node Cassandra on Ubuntu/Bento
 
-
+## What is Cassandra?
 
 ## Catatan
 Semua konfigurasi pada percobaan ini ada di `REPOSITORY` ini. 
@@ -8,17 +8,29 @@ Semua konfigurasi pada percobaan ini ada di `REPOSITORY` ini.
 2 Buah Node masing-masing ber ip 192.168.2.2 (cassandra1) dan 192.168.2.3 (cassandra2)
 
 ## Jumpto
-1. [Single Node](#single-node)
+0. [What is Cassandra?](#what-is-cassandra)
+1. [Arsitektur](#arsitektur)
+1. [Installasi Single Node](#single-node)
     1. [Install Java](#1-install-java)
     2. [Install Cassandra](#2-install-cassandra)
-    3. [Apakah sukses ?](#3-cek-status)
-2. [Multi Node](#multi-node)
-    1. [Delete data lama](#1-delete-data-yang-mungkin-tersimpan)
-    2. [Konfigurasi utama](#2-konfigurasi-cassandra-yaml)
+    3. [Cek Status - Apakah sukses ?](#3-cek-status)
+2. [Installasi Multi Node](#multi-node)
+    1. [Delete data lama yang mungkin tersimpan](#1-delete-data-yang-mungkin-tersimpan)
+    2. [Konfigurasi cassandra-yaml(utama)](#2-konfigurasi-cassandra-yaml)
     3. [Konfigurasi rak](#3-konfigurasi-rak)
-    4. [Restart Cassandra](#4-jalankan-kembali-cassandra)
-    5. [Node Belum terdeteksi?](#5-apabila-node-belum-terdeteksi)
-3. [Kesimpulan](#kesimpulan)
+    4. [Jalankan Kembali Cassandra](#4-jalankan-kembali-cassandra)
+    5. [Apabila Node Belum terdeteksi?](#5-apabila-node-belum-terdeteksi)
+3. [Import Data](#import-data)
+    1. [Masuk ke Cassandra](#1-masuk-ke-cassandra)
+    2. [Buat/Gunakan Keyspace](#2-buat-atau-gunakan-keyspace)
+    3. [Buat ColumnFamily](#3-buat-columnfamily)
+    4. [Import data ke Cassandra](#4-import-data-ke-cassandra)
+4. [CRUD Cassandra](#crud-cassandra)
+    1. [Read imported data](#1-read-imported-data)
+    2. [Insert Data](#2-insert-data)
+    3. [Update Data](#3-update-data)
+    4. [Delete Data](#4-delete-data)
+5. [Kesimpulan](#kesimpulan)
     
 ## Single Node
 #### 1. Install Java
@@ -145,6 +157,17 @@ Apabila anda belum memiliki `IPTABLES` maka install-lah terlebih dahulu dengan s
 ```
 sudo apt-get install iptables -y
 ```
+## Import Data
+#### 1. Masuk ke Cassandra
+#### 2. Buat atau Gunakan Keyspace
+#### 3. Buat ColumnFamily
+#### 4. Import Data Ke Cassandra
+
+## CRUD Cassandra
+#### 1. Read Imported Data
+#### 2. Insert Data
+#### 3. Update Data
+#### 4. Delete Data
 
 ## Kesimpulan
 Kesimpulannya , `Cassandra` merupakan Database No-SQL yang memang memiliki dukungan arsitektur multi-node secara default. Hal ini dapat dilihat dengan mudahnya proses instalasi Cassandra dalam multi-node, tidak seperti MySQL cluster yang lebih _repot_. Anda juga bisa mengakses node lain dengan syntax
