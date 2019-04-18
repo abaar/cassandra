@@ -1,0 +1,1 @@
+create columnfamily application(app varchar, category varchar , rating double, reviews varchar, size varchar, installs varchar, type varchar, price_in_dollars varchar, content_rating varchar, genres varchar, last_update varchar, current_ver varchar, android_ver varchar, primary key(app));
