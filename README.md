@@ -269,6 +269,9 @@ insert into application(
         'Free'
         );
 ```
+
+![insert](https://github.com/abaar/cassandra/blob/master/screenshoot/insert.PNG)
+
 #### 2. Read Imported Data
 ```
 select * from application where app='Sebuah apps';
