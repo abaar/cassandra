@@ -1,15 +1,26 @@
 # Single & Multi-Node Cassandra on Ubuntu/Bento
-
-## What is Cassandra?
+## Tools
+1. cmder
+2. windows command prompt
+3. vagrant
+4. Git bash
 
 ## Catatan
 Semua konfigurasi pada percobaan ini ada di `REPOSITORY` ini. 
+### What is Cassandra?
+Cassandra adalah database NoSQL yang _mirip_ dengan MySQL, Cassandra memiliki `Keyspace` & `ColumnFamily` layaknya MySQL yang memiliki `Database` dan `Table`. Berbeda dengan MongoDB, Cassandra hanya memiliki arsitektur `Masterless` dan replikasi dilakukan secara `ASYNCHRONOUS` dengan teknis penyimpanannya dalam sebuah cache memtable yang mana ketika telah penuh data tersebut di _flush_ kedalam Disk. Sama seperti database NoSQL lainnya, Cassandra dibuat sedemikian rupa sehingga dapat menyokong arsitektur yang terdistribusi secara default.
+
 ### Arsitektur
 2 Buah Node masing-masing ber ip 192.168.2.2 (cassandra1) dan 192.168.2.3 (cassandra2)
 
+### Dataset
+Dataset yang digunakan adalah dataset `googleplaystore` dari [kaggle](https://www.kaggle.com/lava18/google-play-store-apps#googleplaystore_user_reviews.csv). Dataset ini tentang informasi dari beberapa aplikasi yang ada di google play seperti Nama Aplikasi, Rating, Reviews , Ukuran Size , dan lain sebagainya. 
+
 ## Jumpto
+
 0. [What is Cassandra?](#what-is-cassandra)
 1. [Arsitektur](#arsitektur)
+2. [Dataset](#dataset)
 1. [Installasi Single Node](#single-node)
     1. [Install Java](#1-install-java)
     2. [Install Cassandra](#2-install-cassandra)
@@ -26,8 +37,8 @@ Semua konfigurasi pada percobaan ini ada di `REPOSITORY` ini.
     3. [Buat ColumnFamily](#3-buat-columnfamily)
     4. [Import data ke Cassandra](#4-import-data-ke-cassandra)
 4. [CRUD Cassandra](#crud-cassandra)
-    1. [Read imported data](#1-read-imported-data)
-    2. [Insert Data](#2-insert-data)
+    1. [Insert Data](#1-insert-data)
+    2. [Read imported data](#2-read-imported-data)
     3. [Update Data](#3-update-data)
     4. [Delete Data](#4-delete-data)
 5. [Kesimpulan](#kesimpulan)
@@ -159,15 +170,138 @@ sudo apt-get install iptables -y
 ```
 ## Import Data
 #### 1. Masuk ke Cassandra
+Langkah pertama yang harus dilakukan adalah masuk kedalam cassandra melalui `CQLSH` , karena disini saya menggunakan arsitektur Multi-Node maka syntax yang diperlukan adalah :
+```
+cqlsh 'any-ip-node-of-the-cluster' [9042]
+```
+
+![Masuk kedalam Cassandra](https://github.com/abaar/cassandra/blob/master/screenshoot/init.PNG)
+
+
 #### 2. Buat atau Gunakan Keyspace
+Selanjutnya, buatlah keyspace, istilahnya keyspace ini mirip dengan database pada MySQL,berikut contoh cara membuatnya :
+```
+CREATE KEYSPACE IF NOT EXISTS distributed_database WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 2 };
+#ganti 'distributed_database' dengan nama keyspace lain sesuai kehendak
+#class replication ada 2 macam, yang kita gunakan adalah networktopologystrategy dengan replication factor 2
+```
+Untuk info lebih lanjut mengenai topology & replication pada cassandra dapat dilihat [disini](https://docs.datastax.com/en/cql/3.3/cql/cql_reference/cqlCreateKeyspace.html)
+
+![creating keyspace](https://github.com/abaar/cassandra/blob/master/screenshoot/create%20keyspaces.PNG)
+
 #### 3. Buat ColumnFamily
+Lalu, buatlah ColumnFamily, atau dalam MySQL istilahnya adalah tabel, berikut contoh cara membuatnya :
+```
+create columnfamily application(
+    app varchar, 
+    category varchar, 
+    rating double, 
+    reviews varchar, 
+    size varchar, 
+    installs varchar, 
+    type varchar, 
+    price_in_dollars varchar, 
+    content_rating varchar, 
+    genres varchar, 
+    last_update varchar, 
+    current_ver varchar, 
+    android_ver varchar, 
+    primary key(app)
+    );
+# create columnfamily 'names' ('column_name' 'type')
+```
+Untuk informasi lebih lanjut mengenai tipe data pada CQL Cassandra dapat dilihat [disini](https://www.tutorialspoint.com/cassandra/cassandra_cql_datatypes.htm)
+
+![creating columnfamily](https://github.com/abaar/cassandra/blob/master/screenshoot/create%20columnfamily.PNG)
+
+
 #### 4. Import Data Ke Cassandra
+Setelah itu lakukan import data kedalam table yang telah dibuat dengan syntax
+```
+COPY application(app,category,rating,reviews,size,installs,type,price_in_dollars,content_rating,genres,last_update,current_ver,android_ver) from 'googleplaystore.csv' with header=true;
+
+#Copy 'columnfamily'('its column') from 'dataset' with [optional parameter]
+```
+Adapun keterangan optional parameter dapat dilihat [disini](https://docs.datastax.com/en/cql/3.3/cql/cql_reference/cqlshCopy.html)
+
+![import data](https://github.com/abaar/cassandra/blob/master/screenshoot/imported.PNG)
+
+
+
 
 ## CRUD Cassandra
-#### 1. Read Imported Data
-#### 2. Insert Data
+Sebelum melakukan CRUD data dalam cassandra , perlu terhubung dengan `CQLSH` dan `Keyspace` (optional) dimana data berada. Caranya
+```
+USE 'KEYSPACE_NAME'
+```
+
+![use keyspace](https://github.com/abaar/cassandra/blob/master/screenshoot/use%20keyspace.PNG)
+#### 1. Insert Data
+Untuk insert kurang lebih mirip dengan syntax yang ada pada MySQL...
+```
+insert into application(
+    app,
+    android_ver, 
+    category,
+    content_rating,
+    current_ver, 
+    genres, 
+    installs, 
+    last_update, 
+    price_in_dollars, 
+    rating, 
+    reviews, 
+    size, 
+    type
+    )values(
+        'Sebuah apps 2', 
+        '1.1 Up',
+        'Asal-asalan', 
+        '3+' , 
+        '1.1', 
+        'Music', 
+        '1', 
+        'April 9, 2019', 
+        'FREE', 
+        4.7 ,
+        'Mantulll!',
+        '10M',
+        'Free'
+        );
+```
+#### 2. Read Imported Data
+```
+select * from application where app='Sebuah apps';
+
+#select 'column of columnfamily' from [keyspace].'columnfamily' where 'indexed column'
+```
+Perlu diingat bahwa untuk `select` data dengan klausa `where` harus menggunakan `Indexed Column` seperti `Primary Key` atau yang lainnya.
+
+![example of select](https://github.com/abaar/cassandra/blob/master/screenshoot/example%20of%20select.PNG)
+
+![SELECT INSERTED](https://github.com/abaar/cassandra/blob/master/screenshoot/select_inserted.PNG)
+
+
 #### 3. Update Data
+Sama seperti Insert , kurang lebih syntax Update yang digunakan pada `CQL Cassandra` sama seperti MySQL
+```
+update application set last_update = '10 April, 2019' where app='Sebuah apps'
+
+update [keyspace].'columfamily' set 'column' = 'updated_data' where 'indexed_column' = 'data'
+```
+
+![update](https://github.com/abaar/cassandra/blob/master/screenshoot/select_updated.PNG)
+
 #### 4. Delete Data
+Sama seperti Insert & Update , kurang lebih syntax Delete yang digunakan pada `CQL Cassandra` sama seperti MySQL
+```
+delete from application where app='Sebuah apps'
+
+#delete from [keyspace].'columnfamily' where 'indexed_column'='data
+```
+
+![delete](https://github.com/abaar/cassandra/blob/master/screenshoot/select_deleted.PNG)
+
 
 ## Kesimpulan
 Kesimpulannya , `Cassandra` merupakan Database No-SQL yang memang memiliki dukungan arsitektur multi-node secara default. Hal ini dapat dilihat dengan mudahnya proses instalasi Cassandra dalam multi-node, tidak seperti MySQL cluster yang lebih _repot_. Anda juga bisa mengakses node lain dengan syntax
